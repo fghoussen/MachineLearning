@@ -1,0 +1,3 @@
+mushrooms: jeu de données assez utilisé comme exemple, qui contient des entrées correspondants
+à des caractéristiques de champignons (surface, couleur, etc), ainsi qu'un indicateur 'class'
+de comestibilité ('p' pour poisonous, 'e' pour edible).
