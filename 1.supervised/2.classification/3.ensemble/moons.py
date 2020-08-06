@@ -3,7 +3,7 @@
 
 from sklearn import datasets, preprocessing, cluster
 from sklearn.model_selection import train_test_split
-from sklearn.ensemble import BaggingClassifier
+from sklearn.ensemble import BaggingClassifier, RandomForestClassifier
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -78,20 +78,22 @@ def main():
     # https://openclassrooms.com/fr/courses/4011851-initiez-vous-au-machine-learning/4020631-exploitez-votre-jeu-de-donnees
     x_train, x_test, y_train, y_test = train_test_split(x_scaled, y, stratify=y)
 
-    # Create bagging model.
-    bagging_cls = BaggingClassifier(n_estimators=5)
-    bagging_cls.fit(x_train, y_train)
+    # Create bagging and random forest models.
+    classifiers = [BaggingClassifier(n_estimators=5), RandomForestClassifier(n_estimators=5)]
+    for cls in classifiers:
+        cls.fit(x_train, y_train)
 
-    # Plot bagging trees.
-    fig, axes = plt.subplots(2, 3, figsize=(20, 10))
-    for i, (ax, tree) in enumerate(zip(axes.ravel(), bagging_cls.estimators_)):
-        ax.set_title("Tree {}".format(i))
-        plot_tree_partition(tree, x_train, y_train, ax)
+        # Plot intermediate trees.
+        fig, axes = plt.subplots(2, 3, figsize=(20, 10))
+        for i, (ax, tree) in enumerate(zip(axes.ravel(), cls.estimators_)):
+            ax.set_title("Tree {}".format(i))
+            plot_tree_partition(tree, x_train, y_train, ax)
 
-    # Plot bagging classification.
-    bagging_axis = axes[-1, -1] # axis located in last row / column.
-    bagging_axis.set_title("Bagging")
-    plot_classifier_partition(bagging_cls, x_train, y_train, bagging_axis, threshold=0.5)
+        # Plot final classification.
+        cls_axis = axes[-1, -1] # axis located in last row / column.
+        cls_axis.set_title(cls.__class__.__name__)
+        plot_classifier_partition(cls, x_train, y_train, cls_axis, threshold=0.5)
+        fig.suptitle(cls.__class__.__name__)
     plt.show()
 
 if __name__ == '__main__':
