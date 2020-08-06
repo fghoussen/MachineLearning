@@ -3,8 +3,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.ensemble import BaggingRegressor
-from sklearn.tree import DecisionTreeRegressor
+from sklearn.ensemble import BaggingRegressor, RandomForestRegressor
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.svm import SVR
 from sklearn.kernel_ridge import KernelRidge
@@ -20,31 +19,37 @@ def main():
     x = np.sort(x[:])
     y = f(x)
 
-    # Run bagging with different estimators.
-    base_estimators = [DecisionTreeRegressor(), KNeighborsRegressor(), SVR(), KernelRidge()]
+    # Create bagging and random forest models.
     fig, axes = plt.subplots(2, 2, figsize=(20, 10))
-    for ax, base_estimator in zip(axes.ravel(), base_estimators):
-        ax.set_title('estimator: '+str(base_estimator.__class__.__name__))
+    regressors = [BaggingRegressor(n_estimators=5, base_estimator=KNeighborsRegressor()),
+                  BaggingRegressor(n_estimators=5, base_estimator=SVR()),
+                  BaggingRegressor(n_estimators=5, base_estimator=KernelRidge()),
+                  RandomForestRegressor(n_estimators=5)]
+    for ax, reg in zip(axes.ravel(), regressors):
+        # Set title.
+        title = reg.__class__.__name__
+        reg_params = reg.get_params()
+        if 'base_estimator' in reg_params: # RandomForestRegressor has no 'base_estimator'.
+            title += ', estimator: '+reg_params['base_estimator'].__class__.__name__
+        ax.set_title(title)
 
         # Plot random data.
-        ax.plot(x, y, 'o', color='black', markersize=5, label='random data')
+        ax.plot(x, y, 'o', color='black', markersize=2, label='random data')
 
         # Create augmented data : add dimensions to initial data in order to fit y as a polynomial of degree 5.
         x_augmented = np.array([x, x**2, x**3, x**4, x**5]).T
 
-        # Create bagging model.
-        bagging_reg = BaggingRegressor(base_estimator=base_estimator, n_estimators=5)
-        bagging_reg.fit(x_augmented, y)
+        # Train model.
+        reg.fit(x_augmented, y)
 
-        # Plot bagging trees.
-        for i, tree in enumerate(bagging_reg.estimators_):
+        # Plot intermediate regression estimations.
+        for i, tree in enumerate(reg.estimators_):
             ax.plot(x_augmented[:, 0], tree.predict(x_augmented), '-', color='gray', label='tree '+str(i))
             ax.axis('off')
             ax.legend()
 
-        # Plot bagging classification.
-        bagging_axis = axes[-1, -1] # axis located in last row / column.
-        ax.plot(x_augmented[:, 0], bagging_reg.predict(x_augmented), '-', color='red', label='bagging')
+        # Plot final regression.
+        ax.plot(x_augmented[:, 0], reg.predict(x_augmented), '-', color='red', label='bagging')
         ax.axis('off')
         ax.legend()
     plt.show()
