@@ -70,6 +70,7 @@ def main():
         axis.set_zlabel('rms error')
         axis.scatter3D(all_g, all_a, all_rmse)
         # Get the best and worst model.
+        axis = plt.subplot(1, 2, idx_model+2)
         for g, a in zip([best_g, worst_g], [best_a, worst_a]):
             model.set_params(gamma=g)
             model.set_params(alpha=a)
@@ -84,7 +85,6 @@ def main():
                 else:
                     sizes[(yt, yp)] = 1
             keys = sizes.keys()
-            axis = plt.subplot(1, 2, idx_model+2)
             axis.scatter([k[0] for k in keys], [k[1] for k in keys],
                          s=[sizes[k] for k in keys], # marker size = number of pairs (true, predicted) = the bigger, the better.
                          label='alpha %08.3f - gamma %08.3f - RMSE = %0.5f'%(a, g, rmse))
