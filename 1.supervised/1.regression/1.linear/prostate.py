@@ -41,6 +41,7 @@ def main():
     models.append((linear_model.Lasso(fit_intercept=False), 'lasso')) # Compared to LinearRegression: Lasso can cancel some weights.
     models.append((linear_model.ElasticNet(), 'elastic net')) # Mixing Ridge (alpha) and Lasso (1. - alpha).
     error_min, best_alpha, best_model = float('inf'), 0, ''
+    _, all_axis = plt.subplots(2, 4)
     for model_lbl in models:
         # Train a model.
         model, lbl = model_lbl[0], model_lbl[1]
@@ -52,7 +53,7 @@ def main():
             coefs.append(model.coef_) # LinearRegression will have always the same coefs.
             errors.append(np.mean((model.predict(x_test) - y_test) ** 2)) # LinearRegression will have always the same error.
         # Plot errors.
-        axis = plt.subplot(2, 4, 1)
+        axis = all_axis.ravel()[0]
         axis.plot(alphas, errors, label=lbl)
         axis.set_xscale('log')
         axis.set_xlabel('alpha')
@@ -66,7 +67,7 @@ def main():
         # Plot weights.
         nb_coefs = np.shape(coefs)[1]
         for c in range(nb_coefs):
-            axis = plt.subplot(2, 4, c+2)
+            axis = all_axis.ravel()[c+1]
             coef = np.array(coefs)[:, c]
             axis.plot(alphas, coef, label=lbl)
             axis.set_xscale('log')
@@ -75,7 +76,7 @@ def main():
             axis.set_ylim([-0.8, 0.8]) # Set same ylim to see scale between weights.
             axis.legend()
     for i in range(8):
-        axis = plt.subplot(2, 4, i+1)
+        axis = all_axis.ravel()[i]
         axis.axvline(best_alpha, label='best: '+best_model, color='k', ls='--')
         axis.legend()
     plt.subplots_adjust(left=0.1, bottom=0.1, right=0.9, top=0.9, wspace=0.3, hspace=0.3)
