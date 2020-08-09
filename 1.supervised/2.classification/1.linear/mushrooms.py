@@ -40,9 +40,11 @@ def main():
     models = []
     models.append((linear_model.LogisticRegression(solver = 'liblinear'), 'logistic reg'))
     models.append((svm.LinearSVC(loss='hinge'), 'SVM'))
+    _, all_axis = plt.subplots(1, 2)
     for idx_model, model_lbl in enumerate(models):
         # Train a model.
         model, lbl = model_lbl[0], model_lbl[1]
+        axis = all_axis.ravel()[idx_model]
         for p in ['l1', 'l2']:
             # Set parameter model.
             model.set_params(penalty=p)
@@ -63,13 +65,11 @@ def main():
                 false_positive_rate, true_positive_rate, thresholds = roc_curve(y_test, y_prob)
                 roc_auc = auc(false_positive_rate, true_positive_rate)
                 # Plot ROC to identify the best binary classifier.
-                axis = plt.subplot(1, 2, idx_model+1)
                 axis.set_title('Receiver Operating Characteristic')
                 axis.plot(false_positive_rate,true_positive_rate, label='%s - C %08.3f - penalty %s - AUC = %0.5f'%(lbl, c, p, roc_auc))
                 axis.set_ylabel('True Positive Rate')
                 axis.set_xlabel('False Positive Rate')
         # Plot random binary classifier.
-        axis = plt.subplot(1, 2, idx_model+1)
         axis.plot([0, 1], [0, 1], linestyle='--', label='random binary classifier', color='k')
         axis.legend(loc = 'lower right')
     plt.subplots_adjust(left=0.1, bottom=0.1, right=0.9, top=0.9, wspace=0.3, hspace=0.3)
