@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 
-from sklearn.datasets.samples_generator import make_circles
+from sklearn.datasets import make_circles
 from sklearn import preprocessing
 from sklearn import decomposition
 import matplotlib.pyplot as plt
