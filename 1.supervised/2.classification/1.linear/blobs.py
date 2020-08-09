@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 
-from sklearn.datasets.samples_generator import make_blobs
+from sklearn.datasets import make_blobs
 from sklearn import preprocessing
 from sklearn.model_selection import train_test_split
 from sklearn import linear_model, svm
@@ -41,6 +41,7 @@ def main():
     models = []
     models.append((linear_model.LogisticRegression(solver = 'liblinear'), 'logistic reg'))
     models.append((svm.LinearSVC(loss='hinge'), 'SVM'))
+    _, all_axis = plt.subplots(1, 2)
     for idx_model, model_lbl in enumerate(models):
         # Train a model.
         model, lbl = model_lbl[0], model_lbl[1]
@@ -67,7 +68,7 @@ def main():
                 # Plot margins which enable decision.
                 if roc_auc > best_roc_auc:
                     best_roc_auc = roc_auc
-                    axis = plt.subplot(1, 2, idx_model+1)
+                    axis = all_axis.ravel()[idx_model]
                     axis.clear() # Reset axis.
                     axis.scatter(x_train[:, 0], x_train[:, 1], c=y_train, s=50, cmap='autumn')
                     plot_svc_decision_function(model, axis)
