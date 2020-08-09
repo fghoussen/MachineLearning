@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 
-from sklearn.datasets.samples_generator import make_circles
+from sklearn.datasets import make_circles
 from sklearn import preprocessing
 from sklearn.model_selection import train_test_split
 from sklearn import svm
@@ -49,6 +49,7 @@ def main():
         # Train a model.
         model, lbl = model_lbl[0], model_lbl[1]
         best_roc_auc = 0.
+        axis = plt.subplot(1, 2, idx_model+1)
         for g in np.logspace(-2, 2, 3): # g coefficient between 10^-2 and 10^2.
             # Set parameter model.
             model.set_params(gamma=g)
@@ -65,7 +66,6 @@ def main():
                 # Plot margins which enable decision.
                 if roc_auc > best_roc_auc:
                     best_roc_auc = roc_auc
-                    axis = plt.subplot(1, 2, idx_model+1)
                     axis.clear() # Reset axis.
                     axis.scatter(x_train[:, 0], x_train[:, 1], c=y_train, s=50, cmap='autumn')
                     plot_svc_decision_function(model, axis)
