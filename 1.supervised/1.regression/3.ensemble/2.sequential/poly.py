@@ -50,7 +50,7 @@ def main():
                 ax.legend()
 
         # Plot final regression.
-        ax.plot(x_augmented[:, 0], reg.predict(x_augmented), '-', color='red', label='bagging')
+        ax.plot(x_augmented[:, 0], reg.predict(x_augmented), '-', color='red', label=reg.__class__.__name__)
         ax.axis('off')
         ax.legend()
     plt.show()
