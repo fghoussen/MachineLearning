@@ -4,7 +4,7 @@
 from sklearn.datasets import make_circles
 from sklearn import preprocessing
 from sklearn.model_selection import train_test_split
-from sklearn import svm
+from sklearn import svm, neighbors
 from sklearn.metrics import roc_curve, auc
 import numpy as np
 import matplotlib.pyplot as plt
@@ -18,14 +18,23 @@ def plot_svc_decision_function(model, axis):
     y = np.linspace(ylim[0], ylim[1], 30)
     Y, X = np.meshgrid(y, x)
     xy = np.vstack([X.ravel(), Y.ravel()]).T
-    P = model.decision_function(xy).reshape(X.shape)
+    try:
+        P = model.decision_function(xy).reshape(X.shape)
+        lvl = [-1, 0, 1]
+    except:
+        try:
+            P = model.predict(xy).reshape(X.shape)
+            lvl = [0.5]
+        except:
+            raise
 
     # Plot decision boundary and margins.
-    axis.contour(X, Y, P, colors='k', levels=[-1, 0, 1], alpha=0.5, linestyles=['--', '-', '--'])
+    axis.contour(X, Y, P, colors='k', levels=lvl, alpha=0.5, linestyles=['--', '-', '--'])
 
     # Plot support vectors.
-    axis.scatter(model.support_vectors_[:, 0], model.support_vectors_[:, 1],
-                 s=100, facecolors='none', edgecolors='k', linewidths=1, alpha=0.5)
+    if hasattr(model, 'support_vectors_'):
+        axis.scatter(model.support_vectors_[:, 0], model.support_vectors_[:, 1],
+                     s=100, facecolors='none', edgecolors='k', linewidths=1, alpha=0.5)
 
 def main():
     # Create random data.
@@ -49,7 +58,7 @@ def main():
         # Train a model.
         model, lbl = model_lbl[0], model_lbl[1]
         best_roc_auc = 0.
-        axis = plt.subplot(1, 2, idx_model+1)
+        axis = plt.subplot(1, 3, idx_model+1)
         for g in np.logspace(-2, 2, 3): # g coefficient between 10^-2 and 10^2.
             # Set parameter model.
             model.set_params(gamma=g)
@@ -70,6 +79,29 @@ def main():
                     axis.scatter(x_train[:, 0], x_train[:, 1], c=y_train, s=50, cmap='autumn')
                     plot_svc_decision_function(model, axis)
                     axis.set_title('%s - C %08.3f - gamma %s - AUC = %0.5f'%(lbl, c, g, roc_auc))
+
+    # Change the hyperparameters of the model to find the best one, compare different models (with/without regularization).
+    model = neighbors.KNeighborsClassifier()
+    best_roc_auc = 0.
+    axis = plt.subplot(1, 3, 3)
+    for k in range(1, 11):
+        # Set parameter model.
+        model.set_params(n_neighbors=k)
+        # Feed the model.
+        model.fit(x_train,y_train)
+        # Get prediction for positive value
+        y_prob = model.predict(x_test)
+        # Compute ROC curve.
+        false_positive_rate, true_positive_rate, thresholds = roc_curve(y_test, y_prob)
+        roc_auc = auc(false_positive_rate, true_positive_rate)
+        # Plot margins which enable decision.
+        if roc_auc > best_roc_auc:
+            best_roc_auc = roc_auc
+            axis.clear() # Reset axis.
+            axis.scatter(x_train[:, 0], x_train[:, 1], c=y_train, s=50, cmap='autumn')
+            plot_svc_decision_function(model, axis)
+            axis.set_title('%d-NN - AUC = %0.5f'%(k, roc_auc))
+
     plt.subplots_adjust(left=0.1, bottom=0.1, right=0.9, top=0.9, wspace=0.3, hspace=0.3)
     plt.show()
 
