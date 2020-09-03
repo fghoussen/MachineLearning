@@ -5,6 +5,8 @@ import pandas as pd
 from sklearn import preprocessing
 from sklearn.model_selection import train_test_split
 from sklearn import kernel_ridge
+from sklearn.pipeline import Pipeline
+from sklearn.compose import TransformedTargetRegressor
 from sklearn.metrics import mean_squared_error
 import numpy as np
 import matplotlib.pyplot as plt
@@ -21,21 +23,17 @@ def main():
     print('x :\n', x[:5])
     print('y :\n', y[:5])
 
-    # Scale data to reduce weights.
-    # https://openclassrooms.com/fr/courses/4444646-entrainez-un-modele-predictif-lineaire/4507801-reduisez-l-amplitude-des-poids-affectes-a-vos-variables
-    std_scale = preprocessing.StandardScaler().fit(x)
-    x_scaled = std_scale.transform(x)
-
     # Split data set into training set and testing set.
     # https://openclassrooms.com/fr/courses/4011851-initiez-vous-au-machine-learning/4020631-exploitez-votre-jeu-de-donnees
-    x_train, x_test, y_train, y_test = train_test_split(x_scaled, y, test_size=0.3)
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3)
 
     # Change the hyperparameters of the model to find the best one, compare different models (with/without regularization).
     models = []
     models.append((kernel_ridge.KernelRidge(kernel='rbf'), 'reg ridge rbf')) # We use a gaussian kernel: 'rbf' radial basis function.
     for idx_model, model_lbl in enumerate(models):
-        # Train a model.
         model, lbl = model_lbl[0], model_lbl[1]
+
+        # Train a model.
         best_rmse, best_g, best_a = float('inf'), 0, 0
         worst_rmse, worst_g, worst_a = 0, 0, 0
         all_g, all_a, all_rmse = [], [], []
@@ -45,16 +43,25 @@ def main():
             for a in np.logspace(-2, 2, 6): # a coefficient between 10^-2 and 10^2.
                 # Set parameter model.
                 model.set_params(alpha=a)
+
+                # Scale data to reduce weights.
+                # https://openclassrooms.com/fr/courses/4444646-entrainez-un-modele-predictif-lineaire/4507801-reduisez-l-amplitude-des-poids-affectes-a-vos-variables
+                # https://openclassrooms.com/fr/courses/4297211-evaluez-les-performances-dun-modele-de-machine-learning/4308246-tp-selectionnez-le-nombre-de-voisins-dans-un-knn
+                pipe = Pipeline([('scale', preprocessing.StandardScaler()), ('model', model)]) # Data scaling applied before / after any operator applied to the model.
+                treg = TransformedTargetRegressor(regressor=pipe, transformer=preprocessing.MinMaxScaler()) # Target scaling applied before / after any operator applied to the model.
+
                 # Feed the model.
-                model.fit(x_train,y_train)
+                treg.fit(x_train,y_train)
                 # Get prediction for positive value
-                y_prob = model.predict(x_test)
+                y_prob = treg.predict(x_test)
+
                 # Compute root mean square error.
                 rmse = np.sqrt(mean_squared_error(y_test, y_prob))
+
+                # Save best and worst models.
                 all_g.append(g)
                 all_a.append(a)
                 all_rmse.append(rmse)
-                # Save best and worst models.
                 if rmse < best_rmse:
                     best_rmse = rmse
                     best_g = g
@@ -63,20 +70,34 @@ def main():
                     worst_rmse = rmse
                     worst_g = g
                     worst_a = a
+
         # Plot random binary classifier.
         axis = plt.subplot(1, 2, idx_model+1, projection='3d')
         axis.set_xlabel('gamma')
         axis.set_ylabel('alpha')
         axis.set_zlabel('rms error')
         axis.scatter3D(all_g, all_a, all_rmse)
+
         # Get the best and worst model.
         axis = plt.subplot(1, 2, idx_model+2)
         for g, a in zip([best_g, worst_g], [best_a, worst_a]):
             model.set_params(gamma=g)
             model.set_params(alpha=a)
-            model.fit(x_train,y_train)
-            y_prob = model.predict(x_test)
+
+            # Scale data to reduce weights.
+            # https://openclassrooms.com/fr/courses/4444646-entrainez-un-modele-predictif-lineaire/4507801-reduisez-l-amplitude-des-poids-affectes-a-vos-variables
+            # https://openclassrooms.com/fr/courses/4297211-evaluez-les-performances-dun-modele-de-machine-learning/4308246-tp-selectionnez-le-nombre-de-voisins-dans-un-knn
+            pipe = Pipeline([('scale', preprocessing.StandardScaler()), ('model', model)]) # Data scaling applied before / after any operator applied to the model.
+            treg = TransformedTargetRegressor(regressor=pipe, transformer=preprocessing.MinMaxScaler()) # Target scaling applied before / after any operator applied to the model.
+
+            # Feed the model.
+            treg.fit(x_train,y_train)
+            # Get prediction for positive value
+            y_prob = treg.predict(x_test)
+
+            # Compute root mean square error.
             rmse = np.sqrt(mean_squared_error(y_test, y_prob))
+
             # Plot true versus predicted score (marker size = number of pairs true/predicted = the bigger, the better).
             sizes = {}
             for (yt, yp) in zip(list(y_test), list(y_prob)):

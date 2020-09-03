@@ -4,6 +4,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn import linear_model, neighbors
+from sklearn import preprocessing
+from sklearn.pipeline import Pipeline
+from sklearn.compose import TransformedTargetRegressor
 
 def f(x):
     return x*np.cos(x) + np.random.normal(size=500)*2
@@ -29,10 +32,17 @@ def main():
     for regr in regrs:
         model, lbl = regr[0], regr[1]
 
+        # Scale data to reduce weights.
+        # https://openclassrooms.com/fr/courses/4444646-entrainez-un-modele-predictif-lineaire/4507801-reduisez-l-amplitude-des-poids-affectes-a-vos-variables
+        # https://openclassrooms.com/fr/courses/4297211-evaluez-les-performances-dun-modele-de-machine-learning/4308246-tp-selectionnez-le-nombre-de-voisins-dans-un-knn
+        pipe = Pipeline([('scale', preprocessing.StandardScaler()), ('model', model)]) # Data scaling applied before / after any operator applied to the model.
+        treg = TransformedTargetRegressor(regressor=pipe, transformer=preprocessing.MinMaxScaler()) # Target scaling applied before / after any operator applied to the model.
+
         # Train model.
-        model.fit(x_augmented, y)
+        treg.fit(x_augmented, y)
+
         # Plot regression.
-        plt.plot(x_augmented[:,0], model.predict(x_augmented), '-', label=lbl)
+        plt.plot(x_augmented[:,0], treg.predict(x_augmented), '-', label=lbl)
     plt.axis('off')
     plt.legend()
     plt.show()
