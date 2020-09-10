@@ -1,0 +1,5 @@
+Nous allons utiliser les données concernant les caractéristiques physico-chimiques de vins blancs
+portugais disponibles sur l'archive UCI. Il s'agit ici de prédire le score (entre 3 et 9) donné
+par des experts aux différents vins. Chargeons les données et transformons le problème en un problème
+de classification, pour lequel il s'agira de prédire si le score est supérieur à 6 (vin de bonne
+qualité) ou non.
