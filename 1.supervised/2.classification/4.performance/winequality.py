@@ -5,7 +5,7 @@ import pandas as pd
 from sklearn import preprocessing
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn import neighbors
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, f1_score, roc_curve, auc, precision_recall_curve
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -76,9 +76,33 @@ def main():
 
     # Print scores.
     y_pred = clf.predict(x_train)
-    print("\nBest classifier score on training set: {:.3f}".format(accuracy_score(y_train, y_pred)))
+    print("\nBest classifier score on training set: r2 = {:.3f}, F-score = {:.3f}".format(accuracy_score(y_train, y_pred), f1_score(y_train, y_pred)))
     y_pred = clf.predict(x_test)
-    print("\nBest classifier score on testing set: {:.3f}".format(accuracy_score(y_test, y_pred)))
+    print("\nBest classifier score on testing set: r2 = {:.3f}, F-score = {:.3f}".format(accuracy_score(y_test, y_pred), f1_score(y_test, y_pred)))
+
+    # Compute ROC curve.
+    # https://openclassrooms.com/fr/courses/4297211-evaluez-les-performances-dun-modele-de-machine-learning/4308261-evaluez-un-algorithme-de-classification-qui-retourne-des-scores
+    y_pred_proba = clf.predict_proba(x_test)[:, 1]
+    [fpr, tpr, thr] = roc_curve(y_test, y_pred_proba)
+    plt.plot(fpr, tpr, color='coral', lw=2)
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('anti-specificity = 1 - specificity', fontsize=14)
+    plt.ylabel('recall = sensitivity', fontsize=14)
+    plt.title('ROC curve - AUROC %.2f'%auc(fpr, tpr))
+    plt.show()
+
+    # Compute PR curve.
+    # https://openclassrooms.com/fr/courses/4297211-evaluez-les-performances-dun-modele-de-machine-learning/4308261-evaluez-un-algorithme-de-classification-qui-retourne-des-scores
+    y_pred_proba = clf.predict_proba(x_test)[:, 1]
+    [fpr, tpr, thr] = precision_recall_curve(y_test, y_pred_proba)
+    plt.plot(fpr, tpr, color='coral', lw=2)
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('precision', fontsize=14)
+    plt.ylabel('recall = sensitivity', fontsize=14)
+    plt.title('PR curve')
+    plt.show()
 
 if __name__ == '__main__':
     # https://openclassrooms.com/fr/courses/4297211-evaluez-les-performances-dun-modele-de-machine-learning/4308246-tp-selectionnez-le-nombre-de-voisins-dans-un-knn

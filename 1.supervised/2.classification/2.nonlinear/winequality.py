@@ -65,6 +65,7 @@ def main():
                 # Get prediction for positive value
                 y_prob = model.predict(x_test)
                 # Compute ROC curve.
+                # https://openclassrooms.com/fr/courses/4297211-evaluez-les-performances-dun-modele-de-machine-learning/4308261-evaluez-un-algorithme-de-classification-qui-retourne-des-scores
                 false_positive_rate, true_positive_rate, thresholds = roc_curve(y_test, y_prob)
                 roc_auc = auc(false_positive_rate, true_positive_rate)
                 # Plot ROC to identify the best binary classifier.
