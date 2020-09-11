@@ -77,6 +77,7 @@ def main():
         print("{} = {:.3f} (+/-{:.03f}) for {}".format(score, mean, std*2, params))
 
     # Print scores.
+    # https://openclassrooms.com/fr/courses/4297211-evaluez-les-performances-dun-modele-de-machine-learning/4308276-evaluez-un-algorithme-de-regression
     y_pred = clf.predict(x_train)
     print("\nBest classifier score on training set: {:.3f}".format(r2_score(y_train, y_pred)))
     y_pred = clf.predict(x_test)
