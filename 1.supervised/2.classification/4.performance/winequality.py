@@ -6,6 +6,7 @@ from sklearn import preprocessing
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn import neighbors
 from sklearn.metrics import accuracy_score, f1_score, roc_curve, auc, precision_recall_curve
+from sklearn import dummy
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -76,9 +77,22 @@ def main():
 
     # Print scores.
     y_pred = clf.predict(x_train)
-    print("\nBest classifier score on training set: r2 = {:.3f}, F-score = {:.3f}".format(accuracy_score(y_train, y_pred), f1_score(y_train, y_pred)))
+    print("\nBest classifier score on training set: accuracy = {:.3f}, F-score = {:.3f}".format(accuracy_score(y_train, y_pred), f1_score(y_train, y_pred)))
     y_pred = clf.predict(x_test)
-    print("\nBest classifier score on testing set: r2 = {:.3f}, F-score = {:.3f}".format(accuracy_score(y_test, y_pred), f1_score(y_test, y_pred)))
+    print("\nBest classifier score on testing set: accuracy = {:.3f}, F-score = {:.3f}".format(accuracy_score(y_test, y_pred), f1_score(y_test, y_pred)))
+
+    # Compare with baseline dummy classifier.
+    best_dclf, best_dclf_score = None, -float('inf')
+    for s in ['stratified', 'most_frequent', 'prior', 'uniform']:
+        dclf = dummy.DummyClassifier(strategy=s)
+        dclf.fit(x_train, y_train)
+        dclf_score = f1_score(y_test, dclf.predict(x_test))
+        if dclf_score > best_dclf_score:
+            best_dclf, best_dclf_score = dclf, dclf_score
+    y_pred = best_dclf.predict(x_train)
+    print("\nBest classifier score on training set: accuracy = {:.3f}, F-score = {:.3f}".format(accuracy_score(y_train, y_pred), f1_score(y_train, y_pred)))
+    y_pred = best_dclf.predict(x_test)
+    print("\nBest classifier score on testing set: accuracy = {:.3f}, F-score = {:.3f}".format(accuracy_score(y_test, y_pred), f1_score(y_test, y_pred)))
 
     # Compute ROC curve.
     # https://openclassrooms.com/fr/courses/4297211-evaluez-les-performances-dun-modele-de-machine-learning/4308261-evaluez-un-algorithme-de-classification-qui-retourne-des-scores
